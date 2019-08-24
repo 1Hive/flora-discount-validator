@@ -5,12 +5,12 @@ import * as discounts from "./discounts";
 import { persistGas } from "./discounts/addressGas";
 
 export const CHECKPOINT_DURATION = 10 * 1000;
-export const PERIOD_RESET = 5;
+export const PERIOD_RESET = 2;
 
 export function* root(ctx) {
   const stopwatch = new Stopwatch();
   const startBlock = process.env.START_BLOCK || 6592900;
-  const targetBlock = process.env.TARGET_BLOCK || 6592906;
+  const targetBlock = process.env.TARGET_BLOCK || 6592903;
   let block_counter = 0;
 
   let block = yield call(eth.fetchBlockUntil, ctx, startBlock, targetBlock);
@@ -37,13 +37,15 @@ export function* root(ctx) {
       },
       `Processing block #${block.number}`
     );
-    console.log("BLOOOOOCK ", block);
+    // console.log("BLOOOOOCK ", block);
 
     if (block_counter == PERIOD_RESET) {
       block_counter = 0;
       console.log(
         "********************** REEEEESEEEEEETTTTTTTTTT ***********************"
       );
+
+      discounts.processResetPeriod(ctx);
       //Reset gas discount from DB
       yield discounts.processDiscountReset(
         ctx,
@@ -54,6 +56,8 @@ export function* root(ctx) {
       // Fetch transactions and logs
       const transactions = yield call(eth.fetchTransactions, ctx, block);
 
+      console.log("*********** TRANSACTIONSSSSSSSSSSSS*******************");
+      //  console.log(transactions);
       const gasUsedSum = addressWithDiscount.map(address => {
         return transactions
           .filter(trx => trx.from === address)

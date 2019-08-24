@@ -1,5 +1,5 @@
 import { call } from "cofx";
-import { safeUpsert } from "../db";
+import { safeUpsert, getCollection } from "../db";
 
 export function* persistGas(ctx, address, gas) {
   const negativeGas = gas * -1;
@@ -18,4 +18,8 @@ export function* resetGasDiscount(ctx, address) {
     { address },
     { $set: { gas: 0 } }
   );
+}
+
+export function* getAddressGasCollection(ctx) {
+  yield call(getCollection, ctx.db.collection("AddressGas"));
 }

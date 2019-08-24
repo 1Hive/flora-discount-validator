@@ -1,2 +1,6 @@
-export { persistGas, resetGasDiscount } from "./addressGas";
-export { processDiscountReset } from "./processing";
+export {
+  persistGas,
+  resetGasDiscount,
+  getAddressGasCollection
+} from "./addressGas";
+export { processDiscountReset, processResetPeriod } from "./processing";

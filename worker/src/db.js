@@ -25,3 +25,7 @@ export function safeUpsert(collection, filter, update) {
     .updateOne(filter, update, { upsert: true })
     .catch(_ => collection.updateOne(filter, update));
 }
+
+export function getCollection(collection) {
+  return collection.find();
+}
