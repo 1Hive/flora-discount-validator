@@ -11,11 +11,27 @@ export function* persistGas(ctx, address, gas) {
   );
 }
 
-export function* resetGasDiscount(ctx, address) {
+export function* resetGasDiscount(ctx, address, gas) {
   yield call(
     safeUpsert,
     ctx.db.collection("AddressGas"),
     { address },
-    { $set: { gas: 0 } }
+    { $set: { gas } }
   );
+}
+
+export function gasUsedByAddresses(addresses, transactions) {
+  addresses.map(address => {
+    return transactions
+      .filter(trx => trx.from === address)
+      .reduce((gasSum, trx) => {
+        return gasSum + trx.gas;
+      }, 0);
+  });
+}
+
+export function gasUsedOnBlock(transactions) {
+  return transactions.reduce((gasSum, trx) => {
+    return gasSum + trx.gas;
+  }, 0);
 }
