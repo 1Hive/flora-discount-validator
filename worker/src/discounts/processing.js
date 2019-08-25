@@ -1,5 +1,6 @@
 import { call, all } from "cofx";
 import { getAddressGasCollection } from "./addressGas";
+import { Certifier } from "./contracts";
 
 export function* processResetPeriod(
   ctx,
@@ -18,7 +19,7 @@ export function* processResetPeriod(
   console.log("activeAddresses ", activeAddresses);
 
   const newGasForPeriod = activeAddresses.map(address => {
-    const honeyBalance = 1000;
+    const honeyBalance = Honey.methods.balanceOf(address);
 
     return agregateGasUsage * 0.5 * (honeyBalance / honeySupply) * minGasPrice;
   });
@@ -29,14 +30,26 @@ export function* processResetPeriod(
     addresses: addressesToArray,
     gas: newGasForPeriod
   };
+
   console.log("zeroGasAddresses ", zeroGasAddresses);
   // REMOVE ZeroGasAddresses from DB
+  // zeroGasAddresses.forEach(element => {
+  //   console.log(element.address);
+  //   try {
+  //     ctx.db
+  //       .collection("AddressGas")
+  //       .deleteOne({ address: element.address.toString() });
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // });
+
+  // Revoke certify to addresses with zero gas
   zeroGasAddresses.forEach(element => {
     console.log(element.address);
     try {
-      ctx.db
-        .collection("AddressGas")
-        .deleteOne({ address: element.address.toString() });
+      await Certifier.methods.revoke(element.address);
+      // remove from addresses active array
     } catch (error) {
       console.log(error);
     }

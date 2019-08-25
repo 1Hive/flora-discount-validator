@@ -3,16 +3,10 @@ import { Stopwatch } from "./utils/stopwatch";
 import * as eth from "./eth";
 import * as discounts from "./discounts";
 import { persistGas, gasUsedOnBlock } from "./discounts/addressGas";
-
-
-const certifierABI = require(`./abis/HiveCertifier.json`);
-const miniMeABI = require(`./abis/ERC20.json`);
-export const CERTIFIER_ADDRESS = '0x218ff446db9a74b7a391047281d34943e30a6574';
-export const HONEY_ADDRESS = '0xDfD1f311977c282c15F88686426E65062B20a87a';
+import { minGasPrice, Certifier, Honey } from "./discounts/contracts";
 
 export const CHECKPOINT_DURATION = 10 * 1000;
 export const PERIOD_RESET = 2;
-
 
 export function* root(ctx) {
   const stopwatch = new Stopwatch();
@@ -20,20 +14,10 @@ export function* root(ctx) {
   const targetBlock = process.env.TARGET_BLOCK || 6592903;
   let block_counter = 0;
   let agregateGasUsage = 0;
+  let addressBatch; // TODO: Process new active addressess on batches
 
   let block = yield call(eth.fetchBlockUntil, ctx, startBlock, targetBlock);
-  // let addressesWithDiscount = [
-  //   "0xD64644e3cC1Be0Ce686c5883c9a1f99C7dC6128C",
-  //   "0xF3fe7508318d7309f235776f7a462CF75803816C",
-  //   "0x4a7618f4229617D91C6289cb813E2e7292Bd2eFC",
-  //   "0x0FB166dd6Ea14BCbd688419EB23325B6c2BdF76B",
-  //   "0xF96D424c1B422E7d6af4369B8304C6860B29235b"
-  // ];
 
-
-
-  const Certifier = new ctx.web3.eth.Contract(certifierABI, CERTIFIER_ADDRESS);
-  const MiniMe = new ctx.web3.eth.Contract(miniMeABI, MINIME_TOKEN_ADDRESS);
   const addressesWithDiscount = await Certifier.methods.activeAddresses().call()
 
   ctx.log.info(
@@ -61,8 +45,7 @@ export function* root(ctx) {
       );
       agregateGasUsage += gasUsedOnBlock(transactions);
 
-      const honeySupply = await MiniMe.methods.totalSupply().call()
-      const minGasPrice = ctx.web3.eth.getGasPrice()
+      const honeySupply = await Honey.methods.totalSupply().call()
       const discountsArray = yield discounts.processResetPeriod(
         ctx,
         agregateGasUsage,
