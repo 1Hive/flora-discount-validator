@@ -1,7 +1,6 @@
 import { task } from "cofx";
 import Web3 from "web3";
 import createDb, { createIndexes } from "./db";
-import createCache from "./cache";
 import createLogger from "pino";
 import createProvider from "./provider";
 import { root } from "./root";
@@ -10,7 +9,6 @@ import { root } from "./root";
   // Create context
   const context = {
     db: await createDb(),
-    cache: "",
     log: createLogger({ level: process.env.LOG_LEVEL || "info" }),
     web3: new Web3(createProvider())
   };
