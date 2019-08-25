@@ -2,7 +2,11 @@ import { call, all } from "cofx";
 import { Stopwatch } from "./utils/stopwatch";
 import * as eth from "./eth";
 import * as discounts from "./discounts";
-import { persistGas } from "./discounts/addressGas";
+import {
+  persistGas,
+  gasUsedByAddresses,
+  gasUsedOnBlock
+} from "./discounts/addressGas";
 
 export const CHECKPOINT_DURATION = 10 * 1000;
 export const PERIOD_RESET = 2;
@@ -12,6 +16,9 @@ export function* root(ctx) {
   const startBlock = process.env.START_BLOCK || 6592900;
   const targetBlock = process.env.TARGET_BLOCK || 6592903;
   let block_counter = 0;
+  let agregateGasUsage = 0;
+  const honeySupply = 100000;
+  const minGasPrice = 2;
 
   let block = yield call(eth.fetchBlockUntil, ctx, startBlock, targetBlock);
   const addressWithDiscount = [
@@ -37,41 +44,39 @@ export function* root(ctx) {
       },
       `Processing block #${block.number}`
     );
-    // console.log("BLOOOOOCK ", block);
+    console.log("BLOOOOOCK ", block);
+    const transactions = yield call(eth.fetchTransactions, ctx, block);
 
     if (block_counter == PERIOD_RESET) {
       block_counter = 0;
       console.log(
         "********************** REEEEESEEEEEETTTTTTTTTT ***********************"
       );
+      agregateGasUsage += gasUsedOnBlock(transactions);
 
-      discounts.processResetPeriod(ctx);
-      //Reset gas discount from DB
-      yield discounts.processDiscountReset(
+      discountArrays = discounts.processResetPeriod(
         ctx,
-        addressWithDiscount,
-        discounts.resetGasDiscount
+        agregateGasUsage,
+        honeySupply,
+        minGasPrice
       );
+
+      console.log("NEW PERIOD VALUES ", discountArrays);
+
+      agregateGasUsage = 0;
     } else {
       // Fetch transactions and logs
-      const transactions = yield call(eth.fetchTransactions, ctx, block);
 
-      console.log("*********** TRANSACTIONSSSSSSSSSSSS*******************");
-      //  console.log(transactions);
-      const gasUsedSum = addressWithDiscount.map(address => {
-        return transactions
-          .filter(trx => trx.from === address)
-          .reduce((gasSum, trx) => {
-            return gasSum + trx.gas;
-          }, 0);
-      });
+      agregateGasUsage += gasUsedOnBlock(transactions);
+
+      const gasUsed = gasUsedByAddresses(addressWithDiscount, transactions);
 
       // Persist Address - gas
       yield eth.processTransactions(
         ctx,
         addressWithDiscount,
-        gasUsedSum,
-        discounts.persistGas
+        gasUsed,
+        persistGas
       );
 
       block = yield call(
