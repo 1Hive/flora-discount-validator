@@ -7,12 +7,6 @@ services:
     - "27017:27017"
     volumes:
     - mongo-data:/data/db
-  # Cache
-  redis:
-    image: "redis:alpine"
-    entrypoint: redis-server --appendonly yes
-    volumes:
-    - cache-data:/data
   # API
   api:
     build:
@@ -33,24 +27,8 @@ services:
      - LOG_LEVEL=debug
      - MONGODB_URI=mongodb://mongo:27017
      - ETH_NODE=wss://mainnet.eth.aragon.network/ws
-     - REDIS_URL=redis://redis:6379
-     - IPFS_URI=https://ipfs.eth.aragon.network
     depends_on:
      - mongo
-     - redis
-  # Website
-  website:
-    build:
-      context: ./website
-      dockerfile: Dockerfile.frontend
-      args:
-        API_URL: "http://localhost:3000"
-    ports:
-    - "8888:80"
-    depends_on:
-    - api
-    - worker
 
 volumes:
-  cache-data:
   mongo-data:
