@@ -11,6 +11,10 @@ import {
 export const CHECKPOINT_DURATION = 10 * 1000;
 export const PERIOD_RESET = 2;
 
+export const CERTIFIER_ADDRESS = '0x00';
+export const MINIME_TOKEN_ADDRESS = '0x00';
+
+
 export function* root(ctx) {
   const stopwatch = new Stopwatch();
   const startBlock = process.env.START_BLOCK || 6592900;
@@ -21,13 +25,23 @@ export function* root(ctx) {
   const minGasPrice = 2;
 
   let block = yield call(eth.fetchBlockUntil, ctx, startBlock, targetBlock);
-  const addressWithDiscount = [
-    "0xD64644e3cC1Be0Ce686c5883c9a1f99C7dC6128C",
-    "0xF3fe7508318d7309f235776f7a462CF75803816C",
-    "0x4a7618f4229617D91C6289cb813E2e7292Bd2eFC",
-    "0x0FB166dd6Ea14BCbd688419EB23325B6c2BdF76B",
-    "0xF96D424c1B422E7d6af4369B8304C6860B29235b"
-  ];
+  // const addressesWithDiscount = [
+  //   "0xD64644e3cC1Be0Ce686c5883c9a1f99C7dC6128C",
+  //   "0xF3fe7508318d7309f235776f7a462CF75803816C",
+  //   "0x4a7618f4229617D91C6289cb813E2e7292Bd2eFC",
+  //   "0x0FB166dd6Ea14BCbd688419EB23325B6c2BdF76B",
+  //   "0xF96D424c1B422E7d6af4369B8304C6860B29235b"
+  // ];
+
+  const certifierABI = require(`./abis/HiveCertifier.json`).abi;
+  const miniMeABI = require(`./abis/MiniMeToken.json`).abi;
+
+  const Certifier = new ctx.web3.eth.Contract(certifierABI, CERTIFIER_ADDRESS);
+  const MiniMe = new ctx.web3.eth.Contract(miniMeABI, MINIME_TOKEN_ADDRESS);
+
+  const addressesWithDiscount = await Certifier.methods.activeAddresses().call()
+
+  // TODO: Update addresses with discount on both scenarios
 
   ctx.log.info(
     {
@@ -52,7 +66,12 @@ export function* root(ctx) {
       console.log(
         "********************** REEEEESEEEEEETTTTTTTTTT ***********************"
       );
+
       agregateGasUsage += gasUsedOnBlock(transactions);
+
+      const honeySupply = await MiniMe.methods.totalSupply().call()
+
+      const minGasPrice = ctx.web3.eth.getGasPrice()
 
       discountArrays = discounts.processResetPeriod(
         ctx,
@@ -69,12 +88,12 @@ export function* root(ctx) {
 
       agregateGasUsage += gasUsedOnBlock(transactions);
 
-      const gasUsed = gasUsedByAddresses(addressWithDiscount, transactions);
+      const gasUsed = gasUsedByAddresses(addressesWithDiscount, transactions);
 
       // Persist Address - gas
       yield eth.processTransactions(
         ctx,
-        addressWithDiscount,
+        addressesWithDiscount,
         gasUsed,
         persistGas
       );
