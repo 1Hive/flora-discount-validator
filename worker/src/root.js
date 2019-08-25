@@ -45,9 +45,7 @@ export function* root(ctx) {
 
     if (block_counter == PERIOD_RESET) {
       block_counter = 0;
-      console.log(
-        "********************** REEEEESEEEEEETTTTTTTTTT ***********************"
-      );
+
       agregateGasUsage += gasUsedOnBlock(transactions);
 
       const discountsArray = yield discounts.processResetPeriod(
@@ -56,7 +54,6 @@ export function* root(ctx) {
         honeySupply,
         minGasPrice
       );
-      console.log("NEW DISCOUNT ARRAY ", discountsArray);
       agregateGasUsage = 0;
 
       //Reset gas discount from DB
@@ -88,5 +85,4 @@ export function* root(ctx) {
       block_counter = block_counter + 1;
     }
   }
-  console.log("agregateGasUsage ", agregateGasUsage);
 }

@@ -1,5 +1,6 @@
 import { call, all } from "cofx";
 import { getAddressGasCollection } from "./addressGas";
+const { ObjectId } = require("mongodb");
 
 export function* processResetPeriod(
   ctx,
@@ -36,7 +37,9 @@ export function* processResetPeriod(
     try {
       ctx.db
         .collection("AddressGas")
-        .deleteOne({ address: element.address.toString() });
+        .deleteOne({ _id: ObjectId(element._id) }, (err, obj) => {
+          if (err) throw err;
+        });
     } catch (error) {
       console.log(error);
     }
