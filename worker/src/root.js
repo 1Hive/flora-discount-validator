@@ -1,5 +1,4 @@
 import { call, all } from "cofx";
-import { Stopwatch } from "./utils/stopwatch";
 import * as eth from "./eth";
 import * as discounts from "./discounts";
 import { persistGas, gasUsedOnBlock } from "./discounts/addressGas";
@@ -8,7 +7,6 @@ export const CHECKPOINT_DURATION = 10 * 1000;
 export const PERIOD_RESET = 2;
 
 export function* root(ctx) {
-  const stopwatch = new Stopwatch();
   const startBlock = process.env.START_BLOCK || 6592900;
   const targetBlock = process.env.TARGET_BLOCK || 6592903;
   let block_counter = 0;
