@@ -1,55 +1,58 @@
-version: "3"
+version: '3'
 services:
   # Database
   mongo:
     image: mongo
     ports:
-    - "27017:27017"
+      - '27017:27017'
     volumes:
-    - mongo-data:/data/db
+      - mongo-data:/data/db
   # Cache
   redis:
-    image: "redis:alpine"
+    image: 'redis:alpine'
     entrypoint: redis-server --appendonly yes
     volumes:
-    - cache-data:/data
+      - cache-data:/data
   # API
   api:
     build:
       context: ./api
       dockerfile: Dockerfile.web
+      args:
+        API_URL: 'http://localhost:3000'
     ports:
-    - "3000:3000"
+      - '3000:3000'
     environment:
-    - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_URI=mongodb://mongo:27017
+
     depends_on:
-    - mongo
+      - mongo
   # Worker
   worker:
     build:
       context: ./worker
       dockerfile: Dockerfile.worker
     environment:
-     - LOG_LEVEL=debug
-     - MONGODB_URI=mongodb://mongo:27017
-     - ETH_NODE=wss://mainnet.eth.aragon.network/ws
-     - REDIS_URL=redis://redis:6379
-     - IPFS_URI=https://ipfs.eth.aragon.network
+      - LOG_LEVEL=debug
+      - MONGODB_URI=mongodb://mongo:27017
+      - ETH_NODE=wss://mainnet.eth.aragon.network/ws
+      - REDIS_URL=redis://redis:6379
+      - IPFS_URI=https://ipfs.eth.aragon.network
     depends_on:
-     - mongo
-     - redis
+      - mongo
+      - redis
   # Website
-  website:
-    build:
-      context: ./website
-      dockerfile: Dockerfile.frontend
-      args:
-        API_URL: "http://localhost:3000"
-    ports:
-    - "8888:80"
-    depends_on:
-    - api
-    - worker
+  # website:
+  #   build:
+  #     context: ./website
+  #     dockerfile: Dockerfile.frontend
+  #     args:
+  #       API_URL: "http://localhost:3000"
+  #   ports:
+  #   - "8888:80"
+  #   depends_on:
+  #   - api
+  #   - worker
 
 volumes:
   cache-data:
