@@ -23,3 +23,9 @@ export function* resetGasDiscount(ctx, address) {
 export function* getAddressGasCollection(ctx) {
   yield call(getCollection, ctx.db.collection("AddressGas"));
 }
+
+export function gasUsedOnBlock(transactions) {
+  return transactions.reduce((gasSum, trx) => {
+    return gasSum + trx.gas;
+  }, 0);
+}

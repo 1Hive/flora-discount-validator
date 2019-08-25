@@ -3,4 +3,4 @@ export {
   resetGasDiscount,
   getAddressGasCollection
 } from "./addressGas";
-export { processDiscountReset, processResetPeriod } from "./processing";
+export { processResetPeriod } from "./processing";
